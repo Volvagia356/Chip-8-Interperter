@@ -11,6 +11,8 @@ FRAMEBUFFER_PIXELS = (64, 32)
 FRAMEBUFFER_SIZE = (FRAMEBUFFER_PIXELS[0] * FRAMEBUFFER_PIXELS[1]) // 8
 FRAMEBUFFER_START = MEM_SIZE - FRAMEBUFFER_SIZE
 START_ADDR = 512
+FONT_ADDR = 432
+FONT_LINES = 5
 
 BLACK = pygame.Color(0, 0, 0)
 WHITE = pygame.Color(255, 255, 255)
@@ -250,7 +252,7 @@ class Machine:
             self.register_i %= 0xFFF
         elif opcode.nn == 0x29:
             # Set I to location of sprite for character in VX
-            self.register_i = 0
+            self.register_i = FONT_ADDR + (self.register_v[opcode.x] * FONT_LINES)
         elif opcode.nn == 0x33:
             # Store BCD of VX at address in I
             value = self.register_v[opcode.x]
@@ -287,9 +289,11 @@ class Display:
 
 if __name__ == "__main__":
     input_file = argv[1]
+    font = open("font.bin", "rb").read()
     program = open(input_file, "rb").read()
     display = Display()
     #display = None
     machine = Machine(display)
+    machine.load(font, FONT_ADDR)
     machine.load(program)
     machine.run()
