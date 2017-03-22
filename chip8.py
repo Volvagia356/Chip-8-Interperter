@@ -198,28 +198,32 @@ class Machine:
 
     def _handle_prefix_D(self, opcode):
         # Draw N lines to X,Y from sprite at I using XOR. Set VF if pixel cleared
-        x_pos = self.register_v[opcode.x]
-        y_pos = self.register_v[opcode.y]
+        x_pos = self.register_v[opcode.x] % 64
+        y_pos = self.register_v[opcode.y] % 32
         x_byte = (x_pos // 8) % 8
         x_bit = x_pos % 8
+        collision = 0
         for n in range(opcode.n):
-            pixel_addr = FRAMEBUFFER_START+(((y_pos+n)%32)*8)+x_byte
+            line_y_pos = y_pos + n
+            if line_y_pos >= 32:
+                break
+            pixel_addr = FRAMEBUFFER_START+((line_y_pos)*8)+x_byte
             hbyte = self.memory[self.register_i+n] >> x_bit
             ohbyte = self.memory[pixel_addr]
             self.memory[pixel_addr] = ohbyte ^ hbyte
             try:
                 if x_bit != 0:
-                    lbyte = (self.memory[self.register_i+n] << (8 - x_bit)) & 0xFF
-                    olbyte = self.memory[pixel_addr+1]
-                    self.memory[pixel_addr+1] = olbyte ^ lbyte
+                    pixel_addr += 1
+                    if ((pixel_addr - FRAMEBUFFER_START) % 8) != 0:
+                        lbyte = (self.memory[self.register_i+n] << (8 - x_bit)) & 0xFF
+                        olbyte = self.memory[pixel_addr]
+                        self.memory[pixel_addr] = olbyte ^ lbyte
             except IndexError:
                 pass
             else:
                 lbyte = olbyte = 0
             if (ohbyte & ~hbyte) or (olbyte& ~lbyte):
                 collision = 1
-            else:
-                collision = 0
         self.register_v[0xF] = collision
         self.display.draw(self.memory[FRAMEBUFFER_START:])
 
