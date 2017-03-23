@@ -20,7 +20,7 @@ WHITE = pygame.Color(255, 255, 255)
 Opcode = namedtuple("Opcode", ['prefix', 'nnn', 'nn', 'n', 'x', 'y'])
 
 class Machine:
-    def __init__(self, display):
+    def __init__(self, display, tone_generator):
         self.memory = bytearray(MEM_SIZE)
         self.program_counter = START_ADDR
         self.register_v = [0] * 16
@@ -29,6 +29,7 @@ class Machine:
         self.timer_sound = 0
         self.stack = []
         self.display = display
+        self.tone_generator = tone_generator
         self.last_timer = time()
 
     def load(self, data, dest=START_ADDR):
@@ -45,6 +46,8 @@ class Machine:
                     self.timer_delay -= 1
                 if self.timer_sound > 0:
                     self.timer_sound -= 1
+                    if self.timer_sound <= 0:
+                        self.tone_generator.stop()
                 self.last_timer = time_now
         self._process(opcode)
         print(self.register_v, hex(self.register_i))
@@ -254,6 +257,7 @@ class Machine:
         elif opcode.nn == 0x18:
             # Set sound timer to VX
             self.timer_sound = self.register_v[opcode.x]
+            self.tone_generator.start()
         elif opcode.nn == 0x1E:
             # Add VX to I
             self.register_i += self.register_v[opcode.x]
@@ -294,14 +298,28 @@ class Display:
                     frame[x*8+i][y] = pixel
         pygame.display.flip()
 
+class ToneGenerator:
+    def __init__(self, tone):
+        pygame.mixer.pre_init(48000, -16, 1, 1024)
+        pygame.mixer.init()
+        self.tone = pygame.mixer.Sound(tone)
+
+    def start(self):
+        self.stop()
+        self.tone.play()
+
+    def stop(self):
+        self.tone.stop()
 
 if __name__ == "__main__":
     input_file = argv[1]
     font = open("font.bin", "rb").read()
+    tone = open("sound.wav", "rb")
     program = open(input_file, "rb").read()
+    tone_generator = ToneGenerator(tone)
     display = Display()
     #display = None
-    machine = Machine(display)
+    machine = Machine(display, tone_generator)
     machine.load(font, FONT_ADDR)
     machine.load(program)
     machine.run()
