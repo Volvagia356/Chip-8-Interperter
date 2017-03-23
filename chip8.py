@@ -39,9 +39,10 @@ class Machine:
         opcode = self.memory[self.program_counter:self.program_counter+OPCODE_SIZE]
         self.program_counter += OPCODE_SIZE
         if self.timer_delay > 0:
-            if time() - self.last_timer > 1/60:
+            time_now = time()
+            if time_now - self.last_timer > 1/60:
                 self.timer_delay -= 1
-                self.last_timer = time()
+                self.last_timer = time_now
         self._process(opcode)
         print(self.register_v, hex(self.register_i))
 
