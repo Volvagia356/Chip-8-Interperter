@@ -39,6 +39,16 @@ class Machine:
         print(hex(self.program_counter))
         opcode = self.memory[self.program_counter:self.program_counter+OPCODE_SIZE]
         self.program_counter += OPCODE_SIZE
+        self._timers()
+        self._process(opcode)
+        print(self.register_v, hex(self.register_i))
+
+    def run(self):
+        while True:
+            self.cycle()
+            sleep(0.001)
+
+    def _timers(self):
         if self.timer_delay > 0 or self.timer_sound > 0:
             time_now = time()
             if time_now - self.last_timer > 1/60:
@@ -49,13 +59,6 @@ class Machine:
                     if self.timer_sound <= 0:
                         self.tone_generator.stop()
                 self.last_timer = time_now
-        self._process(opcode)
-        print(self.register_v, hex(self.register_i))
-
-    def run(self):
-        while True:
-            self.cycle()
-            sleep(0.001)
 
     def _decode(self, opcode):
         prefix = opcode[0] >> 4
