@@ -38,10 +38,13 @@ class Machine:
         print(hex(self.program_counter))
         opcode = self.memory[self.program_counter:self.program_counter+OPCODE_SIZE]
         self.program_counter += OPCODE_SIZE
-        if self.timer_delay > 0:
+        if self.timer_delay > 0 or self.timer_sound > 0:
             time_now = time()
             if time_now - self.last_timer > 1/60:
-                self.timer_delay -= 1
+                if self.timer_delay > 0:
+                    self.timer_delay -= 1
+                if self.timer_sound > 0:
+                    self.timer_sound -= 1
                 self.last_timer = time_now
         self._process(opcode)
         print(self.register_v, hex(self.register_i))
