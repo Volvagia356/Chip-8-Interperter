@@ -202,7 +202,7 @@ class Machine:
                 self.register_v[0xF] = 0
         elif opcode.n == 0xE:
             # Shift VX left, set VF to MSB of VX before shift
-            self.register_v[0xF] = self.register_v[opcode.x] & 128
+            self.register_v[0xF] = (self.register_v[opcode.x] & 128) >> 7
             self.register_v[opcode.x] = self.register_v[opcode.x] << 1
         else:
             raise Exception("Unknown opcode!")
