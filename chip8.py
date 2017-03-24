@@ -309,7 +309,7 @@ class ToneGenerator:
 
     def start(self):
         self.stop()
-        self.tone.play()
+        self.tone.play(-1)
 
     def stop(self):
         self.tone.stop()
