@@ -17,10 +17,17 @@ FONT_LINES = 5
 BLACK = pygame.Color(0, 0, 0)
 WHITE = pygame.Color(255, 255, 255)
 
+KEYMAP = [pygame.K_x, pygame.K_1, pygame.K_2, pygame.K_3,
+          pygame.K_q, pygame.K_w, pygame.K_e, pygame.K_a,
+          pygame.K_s, pygame.K_d, pygame.K_z, pygame.K_c,
+          pygame.K_4, pygame.K_r, pygame.K_f, pygame.K_v]
+
+REVERSE_KEYMAP = {k: v for v, k in enumerate(KEYMAP)}
+
 Opcode = namedtuple("Opcode", ['prefix', 'nnn', 'nn', 'n', 'x', 'y'])
 
 class Machine:
-    def __init__(self, display, tone_generator):
+    def __init__(self, display, keypad, tone_generator):
         self.memory = bytearray(MEM_SIZE)
         self.program_counter = START_ADDR
         self.register_v = [0] * 16
@@ -29,8 +36,10 @@ class Machine:
         self.timer_sound = 0
         self.stack = []
         self.display = display
+        self.keypad = keypad
         self.tone_generator = tone_generator
         self.last_timer = time()
+        self.waiting_for_input = False
 
     def load(self, data, dest=START_ADDR):
         self.memory[dest:dest+len(data)] = data
@@ -45,8 +54,18 @@ class Machine:
     def run(self):
         while True:
             self._timers()
-            self.cycle()
+            if self.waiting_for_input != False:
+                self._wait_for_input()
+            else:
+                pygame.event.pump()
+                self.cycle()
             sleep(0.001)
+
+    def _wait_for_input(self):
+        key = self.keypad.get_keypress()
+        if key:
+            self.register_v[self.waiting_for_input] = key
+            self.waiting_for_input = False
 
     def _timers(self):
         if self.timer_delay > 0 or self.timer_sound > 0:
@@ -240,10 +259,12 @@ class Machine:
     def _handle_prefix_E(self, opcode):
         if opcode.nn == 0x9E:
             # Skip next instruction if key in VX is pressed
-            pass
+            if self.keypad.is_pressed(self.register_v[opcode.x]):
+                self.program_counter += OPCODE_SIZE
         elif opcode.nn == 0xA1:
             # Skip next instruction if key in VX isn't pressed
-            self.program_counter += OPCODE_SIZE
+            if not self.keypad.is_pressed(self.register_v[opcode.x]):
+                self.program_counter += OPCODE_SIZE
         else:
             raise Exception("Unknown opcode!")
 
@@ -253,7 +274,7 @@ class Machine:
             self.register_v[opcode.x] = self.timer_delay
         elif opcode.nn == 0x0A:
             # Wait for key press, store in VX
-            pass
+            self.waiting_for_input = opcode.x
         elif opcode.nn == 0x15:
             # Set delay timer to VX
             self.timer_delay = self.register_v[opcode.x]
@@ -301,6 +322,23 @@ class Display:
                     frame[x*8+i][y] = pixel
         pygame.display.flip()
 
+class Keypad:
+    def __init__(self):
+        pygame.event.set_allowed(None)
+        pygame.event.set_allowed(pygame.KEYDOWN)
+
+    def get_keypress(self):
+        event = pygame.event.poll()
+        if event.type == pygame.KEYDOWN:
+            pygame.event.pump()
+            return REVERSE_KEYMAP[event.key]
+        else:
+            return False
+
+    def is_pressed(self, key):
+        pressed = pygame.key.get_pressed()
+        return pressed[KEYMAP[key]]
+
 class ToneGenerator:
     def __init__(self, tone):
         pygame.mixer.pre_init(48000, -16, 1, 1024)
@@ -322,7 +360,8 @@ if __name__ == "__main__":
     tone_generator = ToneGenerator(tone)
     display = Display()
     #display = None
-    machine = Machine(display, tone_generator)
+    keypad = Keypad()
+    machine = Machine(display, keypad, tone_generator)
     machine.load(font, FONT_ADDR)
     machine.load(program)
     machine.run()
