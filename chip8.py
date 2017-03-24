@@ -54,7 +54,7 @@ class Machine:
     def run(self):
         while True:
             self._timers()
-            if self.waiting_for_input != False:
+            if self.waiting_for_input is not False:
                 self._wait_for_input()
             else:
                 pygame.event.pump()
