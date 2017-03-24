@@ -331,9 +331,11 @@ class Keypad:
         event = pygame.event.poll()
         if event.type == pygame.KEYDOWN:
             pygame.event.pump()
-            return REVERSE_KEYMAP[event.key]
-        else:
-            return False
+            try:
+                return REVERSE_KEYMAP[event.key]
+            except KeyError:
+                pass
+        return False
 
     def is_pressed(self, key):
         pressed = pygame.key.get_pressed()
