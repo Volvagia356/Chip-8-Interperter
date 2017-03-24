@@ -63,7 +63,7 @@ class Machine:
 
     def _wait_for_input(self):
         key = self.keypad.get_keypress()
-        if key:
+        if key is not False:
             self.register_v[self.waiting_for_input] = key
             self.waiting_for_input = False
 
