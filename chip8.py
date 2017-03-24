@@ -39,12 +39,12 @@ class Machine:
         print(hex(self.program_counter))
         opcode = self.memory[self.program_counter:self.program_counter+OPCODE_SIZE]
         self.program_counter += OPCODE_SIZE
-        self._timers()
         self._process(opcode)
         print(self.register_v, hex(self.register_i))
 
     def run(self):
         while True:
+            self._timers()
             self.cycle()
             sleep(0.001)
 
