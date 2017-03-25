@@ -145,7 +145,7 @@ class Machine:
     def _handle_prefix_5(self, opcode):
         if opcode.n == 0:
             # Skip next instruction if VX == VY
-            if self.register_v[opcode.x] != self.register_v[opcode.y]:
+            if self.register_v[opcode.x] == self.register_v[opcode.y]:
                 self.program_counter += OPCODE_SIZE
         else:
             raise Exception("Unknown opcode!")
