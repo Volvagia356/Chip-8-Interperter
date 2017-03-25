@@ -157,7 +157,7 @@ class Machine:
     def _handle_prefix_7(self, opcode):
         # Add NN to VX
         self.register_v[opcode.x] += opcode.nn
-        self.register_v[opcode.x] %= 0xFF
+        self.register_v[opcode.x] &= 0xFF
 
     def _handle_prefix_8(self, opcode):
         if opcode.n == 0:
@@ -177,7 +177,7 @@ class Machine:
             self.register_v[opcode.x] += self.register_v[opcode.y]
             if self.register_v[opcode.x] > 0xFF:
                 self.register_v[0xF] = 1
-                self.register_v[opcode.x] %= 0xFF
+                self.register_v[opcode.x] &= 0xFF
             else:
                 self.register_v[0xF] = 0
         elif opcode.n == 5:
@@ -185,7 +185,7 @@ class Machine:
             self.register_v[opcode.x] -= self.register_v[opcode.y]
             if self.register_v[opcode.x] < 0:
                 self.register_v[0xF] = 0
-                self.register_v[opcode.x] %= 0xFF
+                self.register_v[opcode.x] &= 0xFF
             else:
                 self.register_v[0xF] = 1
         elif opcode.n == 6:
@@ -197,7 +197,7 @@ class Machine:
             self.register_v[opcode.x] = self.register_v[opcode.y] - self.register_v[opcode.x]
             if self.register_v[opcode.x] < 0:
                 self.register_v[0xF] = 0
-                self.register_v[opcode.x] %= 0xFF
+                self.register_v[opcode.x] &= 0xFF
             else:
                 self.register_v[0xF] = 1
         elif opcode.n == 0xE:
@@ -285,7 +285,7 @@ class Machine:
         elif opcode.nn == 0x1E:
             # Add VX to I
             self.register_i += self.register_v[opcode.x]
-            self.register_i %= 0xFFF
+            self.register_i &= 0xFFF
         elif opcode.nn == 0x29:
             # Set I to location of sprite for character in VX
             self.register_i = FONT_ADDR + (self.register_v[opcode.x] * FONT_LINES)
