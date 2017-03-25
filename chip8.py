@@ -181,25 +181,25 @@ class Machine:
             else:
                 self.register_v[0xF] = 0
         elif opcode.n == 5:
-            # Subtract VY from VX, set VF if borrow
+            # Subtract VY from VX, set VF if not borrow
             self.register_v[opcode.x] -= self.register_v[opcode.y]
             if self.register_v[opcode.x] < 0:
-                self.register_v[0xF] = 1
+                self.register_v[0xF] = 0
                 self.register_v[opcode.x] %= 0xFF
             else:
-                self.register_v[0xF] = 0
+                self.register_v[0xF] = 1
         elif opcode.n == 6:
             # Shift VX right, set VF to LSB of VX before shift
             self.register_v[0xF] = self.register_v[opcode.x] & 1
             self.register_v[opcode.x] = self.register_v[opcode.x] >> 1
         elif opcode.n == 7:
-            # Set VX to (VY - VX), set VF if borrow
+            # Set VX to (VY - VX), set VF if not borrow
             self.register_v[opcode.x] = self.register_v[opcode.y] - self.register_v[opcode.x]
             if self.register_v[opcode.x] < 0:
-                self.register_v[0xF] = 1
+                self.register_v[0xF] = 0
                 self.register_v[opcode.x] %= 0xFF
             else:
-                self.register_v[0xF] = 0
+                self.register_v[0xF] = 1
         elif opcode.n == 0xE:
             # Shift VX left, set VF to MSB of VX before shift
             self.register_v[0xF] = (self.register_v[opcode.x] & 128) >> 7
