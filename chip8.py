@@ -314,12 +314,12 @@ class Display:
     def draw(self, framebuffer):
         frame = pygame.surfarray.pixels2d(self.screen)
         for x in range(FRAMEBUFFER_PIXELS[0]//8):
+            x_block = x * 8
             for y in range(FRAMEBUFFER_PIXELS[1]):
                 byte = framebuffer[(y*8)+x]
-                bitstring = "{:08b}".format(byte)
-                for i, pixel in enumerate(bitstring):
-                    pixel = int(pixel) * 255
-                    frame[x*8+i][y] = pixel
+                for i in range(8):
+                    bit = byte >> i & 1
+                    frame[x_block+7-i][y] = 255 if bit else 0
         pygame.display.flip()
 
 class Keypad:
