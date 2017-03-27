@@ -10,6 +10,8 @@ MEM_SIZE = 4096
 FRAMEBUFFER_PIXELS = (64, 32)
 FRAMEBUFFER_SIZE = (FRAMEBUFFER_PIXELS[0] * FRAMEBUFFER_PIXELS[1]) // 8
 FRAMEBUFFER_START = MEM_SIZE - FRAMEBUFFER_SIZE
+WINDOW_SCALE = 5
+WINDOW_PIXELS = [n * WINDOW_SCALE for n in FRAMEBUFFER_PIXELS]
 START_ADDR = 512
 FONT_ADDR = 432
 FONT_LINES = 5
@@ -309,7 +311,8 @@ class Machine:
 class Display:
     def __init__(self):
         pygame.init()
-        self.screen = pygame.display.set_mode(FRAMEBUFFER_PIXELS, 0, 8)
+        self.window = pygame.display.set_mode(WINDOW_PIXELS, 0, 8)
+        self.screen = pygame.Surface(FRAMEBUFFER_PIXELS, 0, 8)
 
     def draw(self, framebuffer):
         frame = pygame.surfarray.pixels2d(self.screen)
@@ -320,6 +323,7 @@ class Display:
                 for i in range(8):
                     bit = byte >> i & 1
                     frame[x_block+7-i][y] = 255 if bit else 0
+        pygame.transform.scale(self.screen, WINDOW_PIXELS, self.window)
         pygame.display.flip()
 
 class Keypad:
